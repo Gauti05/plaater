@@ -1,0 +1,125 @@
+<div class="dashboard-container" *ngIf="dashboardData">
+    
+    <div class="stats-grid">
+        <app-kpi-card 
+            *ngFor="let kpi of dashboardData.kpis; trackBy: trackByKpi" 
+            [metric]="kpi">
+        </app-kpi-card>
+    </div>
+    
+    <div class="charts-grid">
+      <div class="tile tile-main-chart">
+        <div class="tile-header">
+          <h3>Revenue Analytics</h3>
+          <select [(ngModel)]="selectedChartFilter" (change)="onChartFilterChange()" class="chart-filter">
+              <option value="Hourly">Hourly</option>
+              <option value="Daily">Daily</option>
+              <option value="Yearly">Yearly</option>
+          </select>
+        </div>
+        <div class="chart-body">
+          <apx-chart 
+            [series]="mainChartOptions.series" [chart]="mainChartOptions.chart" 
+            [yaxis]="mainChartOptions.yaxis" [xaxis]="mainChartOptions.xaxis" 
+            [colors]="mainChartOptions.colors" [stroke]="mainChartOptions.stroke" 
+            [fill]="mainChartOptions.fill" [grid]="mainChartOptions.grid" 
+            [dataLabels]="mainChartOptions.dataLabels" [theme]="mainChartOptions.theme">
+          </apx-chart>
+        </div>
+      </div>
+
+      <div class="tile tile-side-chart">
+        <div class="tile-header"><h3>Traffic Source</h3></div>
+        <div class="donut-body">
+          <apx-chart 
+            [series]="donutChartOptions.series" [chart]="donutChartOptions.chart" 
+            [labels]="donutChartOptions.labels" [colors]="donutChartOptions.colors" 
+            [legend]="donutChartOptions.legend" [plotOptions]="donutChartOptions.plotOptions" 
+            [stroke]="donutChartOptions.stroke" [theme]="donutChartOptions.theme">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile tile-datagrid">
+      <div class="tile-header">
+        <h3>Global Transactions Stream</h3>
+        <div class="actions-row">
+          <button type="button" (click)="addDummyData.emit()" class="btn-test">+ Test Data</button>
+          <div class="search-group">
+            <button type="button" class="btn-filter" (click)="toggleFilters.emit($event)" [class.active]="showFilters">🌪️</button>
+            <input type="text" class="search-input" [ngModel]="searchText" (ngModelChange)="searchChange.emit($event)" placeholder="🔍 Search Order" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-panel" *ngIf="showFilters" (click)="$event.stopPropagation()">
+          <div class="filter-row">
+            
+            <div class="filter-group">
+                <label>Status</label>
+                <select [ngModel]="filterStatus" (ngModelChange)="onStatusChange($event)">
+                    <option value="">All Statuses</option>
+                    <option *ngFor="let s of uniqueStatuses" [value]="s">{{s}}</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Method</label>
+                <select [ngModel]="filterMethod" (ngModelChange)="onMethodChange($event)">
+                    <option value="">All Methods</option>
+                    <option *ngFor="let m of uniqueMethods" [value]="m">{{m}}</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Location</label>
+                <select [ngModel]="filterLocation" (ngModelChange)="onLocationChange($event)">
+                    <option value="">All Locations</option>
+                    <option *ngFor="let l of uniqueLocations" [value]="l">{{l}}</option>
+                </select>
+            </div>
+
+          </div>
+          <button type="button" class="btn-clear" (click)="resetFilters.emit()">Clear Filters</button>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+              <tr>
+                  <th>ORDER-ID</th><th>Time</th><th>Customer</th><th>Status</th><th>Method</th><th>Location</th><th class="text-right">Total</th>
+              </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of recentOrders; trackBy: trackByOrderId">
+              <td class="mono">{{ order.id }}</td>
+              <td class="mono">{{ order.time }}</td>
+              <td>{{ order.customer }}</td>
+              <td><span class="status-dot" [ngClass]="order.status.toLowerCase()"></span>{{ order.status }}</td>
+              <td>{{ order.method }}</td>
+              <td>{{ order.location }}</td>
+              <td class="mono text-right">{{ order.amount | currency:'INR' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="pagination-bar">
+            <div class="rows-group">
+                <span>Rows:</span>
+                <select [(ngModel)]="itemsPerPage" (change)="onRowsChange()">
+                    <option *ngFor="let opt of rowOptions" [value]="opt">{{ opt }}</option>
+                </select>
+            </div>
+            <div class="nav-group">
+                <button class="btn-nav" [disabled]="currentPage === 1 || isLoading" (click)="pageChange.emit(currentPage - 1)">← Prev</button>
+                <span class="txt-page">Page</span>
+                <input type="number" class="page-input" [(ngModel)]="tempPage" min="1" [max]="totalPages">
+                <span class="txt-of">of {{ totalPages }}</span>
+                <button class="btn-go" (click)="goToPage()" [disabled]="isLoading">Go</button>
+                <button class="btn-nav" [disabled]="currentPage >= totalPages || isLoading" (click)="pageChange.emit(currentPage + 1)">Next →</button>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>

@@ -1,0 +1,293 @@
+/* =========================================
+   1. THEMING ENGINE (Variables)
+   ========================================= */
+:host { 
+    display: block; 
+    width: 100%; 
+
+    /* Light Mode Defaults */
+    --bg-body: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #0f172a;       /* Dark Slate */
+    --text-muted: #64748b;      /* Muted Slate */
+    --border-color: #e2e8f0;
+    --primary: #3b82f6;
+    --hover-bg: #f1f5f9;
+    --input-bg: #ffffff;
+}
+
+/* 🔥 DARK MODE OVERRIDES */
+/* This activates automatically when 'dark-mode' class is on the body */
+:host-context(body.dark-mode) {
+    --bg-body: #020617;         /* Very Dark Blue */
+    --bg-card: #1e293b;         /* Slate 800 (Cards) */
+    --text-main: #f8fafc;       /* White Text */
+    --text-muted: #94a3b8;      /* Light Grey Text */
+    --border-color: #334155;    /* Darker Border */
+    --hover-bg: #334155;
+    --input-bg: #0f172a;        /* Dark Input Background */
+}
+
+/* =========================================
+   2. LAYOUT & SPACING
+   ========================================= */
+.dashboard-container { 
+    padding: 24px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 24px; /* Vertical gap between rows */
+    background-color: var(--bg-body); /* Adapts to theme */
+}
+
+/* Row 1: KPI Cards */
+.stats-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+    gap: 24px; 
+    width: 100%;
+}
+
+/* Row 2: Charts */
+.charts-grid { 
+    display: grid; 
+    grid-template-columns: 3fr 1fr; 
+    gap: 24px; 
+    /* 🔥 CRITICAL FIX: Forces this row to move down away from the cards */
+    margin-top: 24px; 
+}
+
+/* Row 3: Table Tile */
+.tile-datagrid { 
+    min-height: 400px;
+    /* 🔥 CRITICAL FIX: Forces table to move down away from charts */
+    margin-top: 24px; 
+}
+
+/* =========================================
+   3. COMPONENT STYLES
+   ========================================= */
+
+/* Common Tile (Card) */
+.tile { 
+    background: var(--bg-card);        /* 🔥 Dynamic Background */
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02); 
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.tile-main-chart { padding-bottom: 10px; } 
+
+/* Tile Header */
+.tile-header { 
+    padding: 1rem 1.5rem; 
+    border-bottom: 1px solid var(--border-color); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+.tile-header h3 { 
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    margin: 0; 
+    color: var(--text-main); /* 🔥 Dynamic Text */
+}
+
+/* Chart Controls */
+.chart-filter { 
+    border: none; 
+    background: transparent; 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+    outline: none; 
+}
+/* IMPORTANT: Black text on option elements in some browsers needs forcing */
+.chart-filter option { 
+    background-color: var(--bg-card); 
+    color: var(--text-main); 
+}
+
+.chart-body { flex: 1; padding-top: 10px; min-height: 260px; }
+.donut-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+
+/* Table Controls */
+.actions-row { display: flex; align-items: center; gap: 12px; }
+.search-group { display: flex; gap: 8px; }
+
+.btn-test { 
+    background: #ef4444; 
+    color: white; 
+    border: none; 
+    padding: 6px 12px; 
+    border-radius: 6px; 
+    font-weight: 500; 
+    cursor: pointer; 
+    font-size: 0.85rem; 
+}
+
+.btn-filter { 
+    background: var(--input-bg); 
+    border: 1px solid var(--border-color); 
+    color: var(--text-main); /* 🔥 Fix Icon Color */
+    border-radius: 6px; 
+    padding: 6px 10px; 
+    cursor: pointer; 
+}
+.btn-filter.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+.search-input { 
+    padding: 6px 12px; 
+    background: var(--input-bg); /* 🔥 Dark Input */
+    border: 1px solid var(--border-color); 
+    color: var(--text-main);     /* 🔥 White Text in Dark Mode */
+    border-radius: 6px; 
+    outline: none; 
+    font-size: 0.85rem; 
+    width: 220px; 
+}
+
+/* Filter Panel */
+.filter-panel { 
+    background: var(--bg-body); 
+    border-bottom: 1px solid var(--border-color); 
+    padding: 1rem 1.5rem; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
+}
+.filter-row { display: flex; gap: 15px; flex-wrap: wrap; }
+.filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 140px; }
+
+.filter-group label { 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+}
+
+.filter-group select { 
+    padding: 6px; 
+    border: 1px solid var(--border-color); 
+    background: var(--input-bg); 
+    color: var(--text-main); 
+    border-radius: 4px; 
+}
+
+.btn-clear { 
+    align-self: flex-start; 
+    background: none; 
+    border: none; 
+    text-decoration: underline; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+    font-size: 0.8rem; 
+}
+
+/* Table Styles */
+.table-responsive { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+th { 
+    text-align: left; 
+    padding: 1rem 1.5rem; 
+    color: var(--text-muted); 
+    font-weight: 600; 
+    border-bottom: 1px solid var(--border-color); 
+    background: var(--bg-body); /* Darker header in dark mode */
+    white-space: nowrap; 
+}
+
+td { 
+    padding: 0.9rem 1.5rem; 
+    border-bottom: 1px solid var(--border-color); 
+    color: var(--text-main); /* White text in dark mode */
+    white-space: nowrap; 
+}
+
+.text-right { text-align: right; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Status Dots */
+.status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-dot.completed { background: #10b981; }
+.status-dot.processing { background: #f59e0b; }
+.status-dot.failed { background: #ef4444; }
+
+/* Pagination */
+.pagination-bar { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 12px 20px; 
+    background: var(--bg-card); 
+    border-top: 1px solid var(--border-color);
+    font-size: 0.85rem; 
+    color: var(--text-muted); 
+    gap: 20px; 
+}
+
+.rows-group { display: flex; align-items: center; gap: 8px; }
+
+.rows-group select { 
+    padding: 4px 2px; 
+    border: 1px solid var(--border-color); 
+    background: var(--input-bg); 
+    color: var(--text-main); 
+    border-radius: 4px; 
+    outline: none; 
+    cursor: pointer; 
+}
+
+.nav-group { display: flex; align-items: center; gap: 8px; }
+
+.btn-nav { 
+    padding: 5px 12px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 6px; 
+    background: var(--input-bg); 
+    color: var(--text-main); 
+    cursor: pointer; 
+    font-weight: 500; 
+    transition: all 0.2s; 
+}
+.btn-nav:hover:not(:disabled) { background: var(--hover-bg); border-color: var(--border-color); }
+.btn-nav:disabled { opacity: 0.5; cursor: default; color: var(--text-muted); }
+
+.page-input { 
+    width: 40px; 
+    padding: 4px; 
+    text-align: center; 
+    border: 1px solid var(--border-color); 
+    background: var(--input-bg); 
+    color: var(--text-main); 
+    border-radius: 4px; 
+    font-size: 0.85rem; 
+    outline: none; 
+}
+.page-input:focus { border-color: var(--primary); }
+
+.btn-go { 
+    background: transparent; 
+    border: none; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    cursor: pointer; 
+    padding: 4px 8px; 
+}
+.btn-go:hover { text-decoration: underline; }
+
+/* Mobile */
+@media (max-width: 1024px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .tile-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .pagination-bar { flex-wrap: wrap; justify-content: center; }
+}

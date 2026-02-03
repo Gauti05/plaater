@@ -1,0 +1,172 @@
+/* =========================================
+   1. THEMING ENGINE (Inherited)
+   ========================================= */
+:host {
+    display: block;
+    height: 100%;
+    
+    /* Local Defaults (Fallback) */
+    --bg-card: #ffffff;
+    --border-color: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --primary: #2563eb;
+    --bg-surface: #f8fafc;
+    --input-bg: #ffffff;
+}
+
+:host-context(body.dark-mode) {
+    --bg-card: #1e293b;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --bg-surface: #0f172a;
+    --input-bg: #0f172a;
+}
+
+/* =========================================
+   2. LAYOUT
+   ========================================= */
+.inventory-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.tile-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tile-header h3 { margin: 0; color: var(--text-main); font-size: 1.1rem; }
+
+.header-actions { display: flex; gap: 12px; }
+
+.search-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 250px;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* =========================================
+   3. FILTERS BAR
+   ========================================= */
+.filters-bar {
+    padding: 1rem 1.5rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.filter-group { display: flex; align-items: center; gap: 8px; }
+.filter-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+.filter-group select {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    outline: none;
+}
+
+.summary-badge {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* =========================================
+   4. TABLE STYLES
+   ========================================= */
+.table-responsive { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+
+th {
+    text-align: left;
+    padding: 1rem 1.5rem;
+    background: var(--bg-surface);
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.mono { font-family: monospace; color: var(--text-muted); }
+.fw-600 { font-weight: 600; }
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.status-badge.green { background: #dcfce7; color: #166534; }
+.status-badge.orange { background: #ffedd5; color: #9a3412; }
+.status-badge.red { background: #fee2e2; color: #991b1b; }
+
+/* Dark Mode Badge Adjustments */
+:host-context(body.dark-mode) .status-badge.green { background: #064e3b; color: #6ee7b7; }
+:host-context(body.dark-mode) .status-badge.orange { background: #431407; color: #fdba74; }
+:host-context(body.dark-mode) .status-badge.red { background: #450a0a; color: #fca5a5; }
+
+/* Stock Progress Bar */
+.stock-wrapper { display: flex; flex-direction: column; gap: 4px; }
+.stock-text { font-size: 0.8rem; color: var(--text-muted); }
+.progress-track {
+    width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 3px; }
+.progress-fill.green { background: #22c55e; }
+.progress-fill.orange { background: #f97316; }
+.progress-fill.red { background: #ef4444; }
+
+/* Action Buttons */
+.action-buttons { display: flex; gap: 8px; }
+.btn-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.btn-icon:hover { background: var(--bg-surface); }
+
+.empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--text-muted);
+}

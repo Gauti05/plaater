@@ -1,0 +1,17 @@
+<header class="topbar">
+    <div style="display:flex; align-items:center; gap:1rem;">
+      <button type="button" class="btn-icon" (click)="toggleSidebar.emit()">☰</button>
+      <div style="display:flex; flex-direction:column;">
+          <span style="font-weight:600; font-size:1rem;">{{ currentView }}</span>
+          <span class="hide-xs" style="font-size:0.75rem; color:var(--text-secondary);" *ngIf="currentView === 'Dashboard'">Welcome back, {{ currentUser.name }}</span>
+          <span class="hide-xs" style="font-size:0.75rem; color:var(--text-secondary);" *ngIf="currentView === 'Reports'">Overview of system performance and activity</span>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <div style="background: #f1f5f9; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); border: 1px solid var(--border-color);">
+          {{ currentUser.role }}
+      </div>
+      <button type="button" class="btn-icon" (click)="toggleTheme.emit()" title="Toggle Theme">{{ isDarkMode ? '☀️' : '🌙' }}</button>
+      <div style="height:36px; width:36px; background:var(--primary); color:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem;">{{ currentUser.initials }}</div>
+    </div>
+</header>

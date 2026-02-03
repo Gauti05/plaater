@@ -1,0 +1,59 @@
+<div class="pos-screen-container">
+    <div class="pos-products-area">
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let p of products; trackBy: trackByProductId" (click)="add.emit(p)">
+          <div class="p-icon" [style.background]="p.color">{{ p.icon }}</div>
+          <div class="p-info">
+            <span class="p-name">{{ p.name }}</span>
+            <span class="p-price">{{ p.price | currency:'INR' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="pos-cart-panel">
+      <div class="cart-header">
+          <h3>Current Order</h3>
+          <span class="count-badge">
+             {{ cart.length }} Items
+          </span>
+      </div>
+
+      <div class="cart-items">
+          <div class="cart-item" *ngFor="let item of cart">
+              <div class="item-details">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-meta">{{ item.quantity }} x {{ item.price | currency:'INR' }}</span>
+              </div>
+              <div class="item-actions">
+                  <span class="item-total">{{ item.price * item.quantity | currency:'INR' }}</span>
+                  <button type="button" class="btn-remove" (click)="remove.emit(item)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                  </button>
+              </div>
+          </div>
+          
+          <div *ngIf="cart.length === 0" class="empty-cart-state">
+              <div style="font-size:2rem; margin-bottom:0.5rem;">🛒</div>
+              <span>Start adding items</span>
+          </div>
+      </div>
+      
+      <div class="cart-footer">
+          <div class="total-row">
+              <span>Total Payable</span>
+              <span style="font-size:1.4rem; font-weight:700; color:var(--primary);">{{ total | currency:'INR' }}</span>
+          </div>
+          
+          <button type="button" class="btn-checkout" (click)="checkout.emit()" [disabled]="cart.length === 0">
+              <span>CHARGE</span>
+              <span>{{ total | currency:'INR' }}</span>
+          </button>
+          
+          <div class="shortcuts-hint" style="display:flex; justify-content:space-between; margin-top:10px; opacity:0.6;">
+              <span   style="cursor:pointer;" (click)="clear.emit()">🗑️ Clear Cart (shift+del)</span>
+              <span>⌨️ <b>Ctrl+Enter</b> Pay</span>
+          </div>
+      </div>
+    </div>
+</div>

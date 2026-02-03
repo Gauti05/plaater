@@ -1,0 +1,87 @@
+<div class="inventory-container">
+    <div class="tile-header">
+        <h3>Inventory Manager</h3>
+        <div class="header-actions">
+            <div class="search-group">
+                <input type="text" 
+                       class="search-input" 
+                       [(ngModel)]="searchText" 
+                       (ngModelChange)="applyFilters()" 
+                       placeholder="🔍 Search SKU or Name...">
+            </div>
+            <button class="btn-primary" (click)="addItem.emit()">+ Add Product</button>
+        </div>
+    </div>
+
+    <div class="filters-bar">
+        <div class="filter-group">
+            <label>Category:</label>
+            <select [(ngModel)]="filterCategory" (change)="applyFilters()">
+                <option value="">All Categories</option>
+                <option *ngFor="let c of uniqueCategories" [value]="c">{{ c }}</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Status:</label>
+            <select [(ngModel)]="filterStatus" (change)="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="In Stock">In Stock</option>
+                <option value="Low Stock">Low Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
+            </select>
+        </div>
+        <div class="summary-badge">
+            <span>Total Items: {{ filteredInventory.length }}</span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock Level</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of filteredInventory">
+                    <td class="mono">{{ item.sku }}</td>
+                    <td class="fw-600">{{ item.name }}</td>
+                    <td>{{ item.category }}</td>
+                    <td class="mono">{{ item.price | currency:'INR' }}</td>
+                    <td style="min-width: 120px;">
+                        <div class="stock-wrapper">
+                            <span class="stock-text">{{ item.stock }} units</span>
+                            <div class="progress-track">
+                                <div class="progress-fill" 
+                                     [style.width.%]="getStockPercent(item)"
+                                     [class]="getStatusColor(item.status)">
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge" [class]="getStatusColor(item.status)">
+                            {{ item.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon edit" (click)="editItem.emit(item)">✏️</button>
+                            <button class="btn-icon delete" (click)="deleteItem.emit(item.id)">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div *ngIf="filteredInventory.length === 0" class="empty-state">
+            <p>No inventory items match your search.</p>
+        </div>
+    </div>
+</div>

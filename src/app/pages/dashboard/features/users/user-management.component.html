@@ -1,0 +1,114 @@
+<div class="user-management-container">
+  <div class="tile-header">
+    <h3>User Management</h3>
+    <div class="header-actions">
+      <button type="button" class="btn-secondary" (click)="openRoleModal()">⚙️ Create Custom Role</button>
+      <button type="button" class="btn-primary" (click)="openAddUserModal()">+ Add New User</button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td class="mono">{{ user.id }}</td>
+          <td><div style="font-weight:600;">{{ user.name }}</div></td>
+          <td>{{ user.email }}</td>
+          <td><span class="role-badge">{{ user.role }}</span></td>
+          <td>
+            <div class="status-indicator">
+              <span class="dot" [ngClass]="user.status === 'Active' ? 'green' : 'red'"></span>
+              {{ user.status }}
+            </div>
+          </td>
+          <td>
+            <button type="button" *ngIf="currentUser.permissions.canDeleteUsers && user.email !== currentUser.email" class="btn-text-danger" (click)="deleteUser.emit(user.id)">Remove</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" [class.wide-modal]="isRoleCreatorMode">
+    
+    <div class="modal-header">
+      <h3>{{ isRoleCreatorMode ? 'Create Custom Role' : 'Add New User' }}</h3>
+      <button type="button" class="btn-close" (click)="closeModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      
+      <div *ngIf="isRoleCreatorMode">
+        <div class="form-group">
+          <label>Role Name</label>
+          <input type="text" [(ngModel)]="newRoleName" placeholder="e.g. Shift Manager">
+        </div>
+        <div class="permissions-section">
+          <label class="section-label">Permissions</label>
+          <div class="checkbox-grid">
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canViewDashboard"> View Dashboard</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canViewOrders"> View Orders</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canCreateOrder"> POS Terminal</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canManageInventory"> Inventory</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canViewReports"> Reports</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canManageUsers"> Manage Users</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canDeleteUsers"> Delete Users</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canViewCustomers"> CRM</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canManageSettings"> Settings</label>
+             <label class="checkbox-item"><input type="checkbox" [(ngModel)]="newRolePermissions.canViewAuditLog"> Audit Logs</label>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isRoleCreatorMode">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="newUser.name" placeholder="Ex: John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" [(ngModel)]="newUser.email" placeholder="user@company.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="newUser.password" placeholder="••••••">
+        </div>
+        <div class="form-group">
+          <label>Assign Role</label>
+          <select [(ngModel)]="newUser.role">
+            <option *ngFor="let role of availableRoles" [value]="role.name">{{ role.name }}</option>
+          </select>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-text" (click)="closeModal()">Cancel</button>
+      <button type="button" class="btn-primary" [disabled]="isProcessing" (click)="isRoleCreatorMode ? handleCreateRole() : handleCreateUser()">
+        <span *ngIf="!isProcessing">{{ isRoleCreatorMode ? 'Save Role' : 'Create User' }}</span>
+        <span *ngIf="isProcessing">Processing...</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-overlay" *ngIf="showToast">
+  <div class="toast-box">
+    <span>{{ toastMessage }}</span>
+    <button class="btn-toast-ok" (click)="showToast = false">OK</button>
+  </div>
+</div>

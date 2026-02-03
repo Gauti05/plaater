@@ -1,0 +1,98 @@
+<div class="reports-container" [class.dark-mode-active]="isDarkMode">
+  
+  <div class="reports-header">
+    <h2>Standard Reports</h2>
+    <div class="header-controls">
+      <select [(ngModel)]="selectedDateRange" class="control-select">
+        <option>Last 30 Days</option>
+        <option>This Month</option>
+        <option>Last Month</option>
+      </select>
+      <select [(ngModel)]="selectedBranch" class="control-select">
+        <option>All Branches</option>
+        <option>Main Branch</option>
+      </select>
+      <button class="btn-export">📄 Export Data</button>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card" *ngFor="let kpi of reportKpis">
+      <div class="kpi-icon" [ngClass]="kpi.color">{{ kpi.icon }}</div>
+      <div class="kpi-info">
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <span class="kpi-value">{{ kpi.value }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="reports-grid">
+    
+    <div class="tile chart-section">
+      <div class="tile-header">
+        <h3>Sales Overview</h3>
+      </div>
+      <div class="chart-content">
+        <h4 class="chart-title">₹ Revenue & Orders</h4>
+        
+        <div class="chart-wrapper" *ngIf="chartOptions && chartOptions.series">
+           <apx-chart 
+              [series]="chartOptions.series" 
+              [chart]="chartOptions.chart" 
+              [yaxis]="chartOptions.yaxis" 
+              [xaxis]="chartOptions.xaxis" 
+              [colors]="chartOptions.colors" 
+              [stroke]="chartOptions.stroke" 
+              [fill]="chartOptions.fill" 
+              [grid]="chartOptions.grid" 
+              [theme]="chartOptions.theme">
+           </apx-chart>
+        </div>
+      </div>
+
+      <div class="chart-footer-stats">
+        <div class="stat-item" *ngFor="let stat of salesStats">
+          <span class="stat-label">{{ stat.label }}</span>
+          <span class="stat-val">{{ stat.value }}</span>
+        </div>
+        <div class="stat-item">
+           <span class="stat-label">Growth</span>
+           <span class="stat-val success">+12.5% ▲</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-column">
+      
+      <div class="tile summary-card">
+        <div class="tile-header green-header">
+          <h3>Order Summary</h3>
+          <span class="dots">•••</span>
+        </div>
+        <div class="tile-body">
+          <div class="summary-row" *ngFor="let item of orderSummary">
+            <span class="row-label">{{ item.label }}</span>
+            <span class="row-val">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tile inventory-card">
+        <div class="tile-header orange-header">
+          <h3>Inventory Status</h3>
+          <span class="dots">•••</span>
+        </div>
+        <div class="tile-body">
+          <div class="inventory-row" *ngFor="let item of inventoryStatus">
+            <div class="inv-name">
+              <span class="dot" [style.background]="item.color"></span>
+              {{ item.name }}
+            </div>
+            <span class="inv-status">{{ item.status }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

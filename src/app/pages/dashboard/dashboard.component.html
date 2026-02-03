@@ -1,0 +1,92 @@
+<div class="layout-wrapper" [class.sidebar-open]="isSidebarOpen" *ngIf="!isUserLoading">
+  
+  <app-sidebar 
+    [currentUser]="currentUser" 
+    [currentView]="currentView" 
+    (navigate)="navigateTo($event)" 
+    (logout)="logout()" 
+    (launchPos)="launchPOS()" 
+    (closeSidebar)="isSidebarOpen = false">
+  </app-sidebar>
+
+  <main class="main-content">
+    
+    <app-topbar 
+        [currentUser]="currentUser" 
+        [currentView]="currentView" 
+        [isDarkMode]="isDarkMode" 
+        (toggleSidebar)="toggleSidebar()" 
+        (toggleTheme)="toggleTheme()">
+    </app-topbar>
+
+    <app-dashboard-overview *ngIf="currentView === 'Dashboard'"
+        [dashboardData]="dashboardData"
+        [recentOrders]="recentOrders"
+        [mainChartOptions]="mainChartOptions"
+        [donutChartOptions]="donutChartOptions"
+        [isLoading]="isLoading"
+        
+        [currentPage]="currentPage"
+        [isLastPage]="isLastPage"
+        [itemsPerPage]="itemsPerPage"
+        [totalItems]="totalItems" 
+        
+        [searchText]="searchText"
+        [showFilters]="showFilters"
+        [filterStatus]="filterStatus"
+        [filterMethod]="filterMethod"
+        [filterLocation]="filterLocation"
+        
+        (searchChange)="onSearchInput($event)"
+        (pageChange)="handlePageChange($event)"
+        (itemsPerPageChange)="onItemsPerPageChange($event)"
+        (toggleFilters)="toggleFilters($event)"
+        (resetFilters)="resetFilters()"
+        (addDummyData)="addDummyData()"
+
+        (filterStatusChange)="updateFilterStatus($event)"
+        (filterMethodChange)="updateFilterMethod($event)"
+        (filterLocationChange)="updateFilterLocation($event)"
+        (chartFilterChange)="updateChartFilter($event)">
+    </app-dashboard-overview>
+
+    <app-crm-view *ngIf="currentView === 'Customers'" [customers]="crmCustomers"></app-crm-view>
+
+    <app-pos-terminal *ngIf="currentView === 'POS'" 
+        [posProducts]="posProducts" 
+        [cart]="cart" 
+        [cartTotal]="cartTotal" 
+        (addToCart)="addToCart($event)" 
+        (removeFromCart)="removeFromCart($event)" 
+        (clearCart)="clearCart()" 
+        (checkout)="processCheckout()">
+    </app-pos-terminal>
+
+    <app-inventory-manager 
+        *ngIf="currentView === 'Inventory'"
+        [inventory]="inventoryItems"
+        (addItem)="onAddItem()"
+        (editItem)="onEditItem($event)"
+        (deleteItem)="onDeleteItem($event)">
+    </app-inventory-manager>
+
+    <app-reports-view *ngIf="currentView === 'Reports'" 
+        [reportKpis]="reportKpis" 
+        [salesStats]="salesStats" 
+        [orderSummary]="orderSummary" 
+        [inventoryStatus]="inventoryStatus" 
+        [mainChartOptions]="mainChartOptions"
+        [isDarkMode]="isDarkMode"> 
+    </app-reports-view>
+
+    <app-user-management *ngIf="currentView === 'Users'" 
+        [managedUsers]="managedUsers" 
+        [currentUser]="currentUser" 
+        [availableRoles]="availableRoles" 
+        (deleteUser)="deleteUser($event)" 
+        (saveUser)="submitNewUser($event)" 
+        (saveRole)="saveCustomRole($event)">
+    </app-user-management>
+
+  </main>
+</div>

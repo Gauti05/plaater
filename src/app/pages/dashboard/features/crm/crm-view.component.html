@@ -1,0 +1,23 @@
+<div class="dashboard-container">
+    <div class="tile tile-datagrid">
+       <div class="tile-header">
+          <h3>Customer Relationship Management (CRM)</h3>
+          <button class="btn-primary">+ Add Customer</button>
+       </div>
+       <div class="table-responsive">
+          <table>
+             <thead><tr><th>Customer ID</th><th>Name</th><th>Email</th><th>Total Orders</th><th>Total Spent</th><th>Last Active</th></tr></thead>
+             <tbody>
+                <tr *ngFor="let c of customers">
+                   <td class="mono">{{c.id}}</td>
+                   <td><span style="font-weight:600">{{c.name}}</span></td>
+                   <td>{{c.email}}</td>
+                   <td>{{c.orders}}</td>
+                   <td class="mono" style="font-weight:700;">{{c.spent | currency:'INR'}}</td>
+                   <td style="color:var(--text-secondary); font-size:0.8rem;">{{c.lastActive}}</td>
+                </tr>
+             </tbody>
+          </table>
+       </div>
+    </div>
+ </div>

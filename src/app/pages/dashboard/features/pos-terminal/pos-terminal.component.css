@@ -1,0 +1,314 @@
+/* =========================================
+   1. THEMING ENGINE (Variables)
+   ========================================= */
+:host {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    /* Light Mode Defaults */
+    --primary: #2563eb; 
+    --primary-hover: #1d4ed8;
+    
+    --bg-body: #f8fafc; 
+    --bg-surface: #ffffff;
+    --bg-cart-items: #f8fafc;
+    
+    --text-main: #0f172a; 
+    --text-secondary: #64748b; 
+    
+    --border-color: #e2e8f0; 
+    --icon-bg: #f1f5f9;
+    --checkout-disabled: #cbd5e1;
+}
+
+/* 🔥 DARK MODE OVERRIDES */
+:host-context(body.dark-mode) {
+    --bg-body: #020617;         /* Very Dark Blue */
+    --bg-surface: #1e293b;      /* Slate 800 (Cards/Panels) */
+    --bg-cart-items: #0f172a;   /* Darker background for item list */
+    
+    --text-main: #f8fafc;       /* White Text */
+    --text-secondary: #94a3b8;  /* Light Grey Text */
+    
+    --border-color: #334155;    /* Darker Border */
+    --icon-bg: #334155;         /* Dark Icon Background */
+    --checkout-disabled: #475569;
+}
+
+/* =========================================
+   2. POS LAYOUT
+   ========================================= */
+.pos-screen-container { 
+    display: flex; 
+    height: calc(100vh - 80px); /* Adjusted for topbar */
+    overflow: hidden; 
+    background: var(--bg-body); /* 🔥 Dynamic Background */
+}
+
+.pos-products-area { 
+    flex: 1; 
+    padding: 24px; 
+    overflow-y: auto; 
+}
+
+/* Grid Layout for Product Cards */
+.products-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+    gap: 16px; 
+    width: 100%;
+}
+
+.product-card { 
+    background: var(--bg-surface); /* 🔥 Dynamic Card BG */
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    cursor: pointer; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column; 
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.product-card:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+}
+
+.product-card:active { transform: scale(0.98); }
+
+.p-icon { 
+    height: 90px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 2.5rem; 
+    background: var(--icon-bg); /* 🔥 Dynamic Icon BG */
+    width: 100%; 
+}
+
+.p-info { 
+    padding: 12px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;
+}
+
+.p-name { 
+    font-weight: 600; 
+    font-size: 0.9rem; 
+    color: var(--text-main); /* 🔥 Dynamic Text */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.p-price { 
+    font-size: 0.85rem; 
+    color: var(--text-secondary); /* 🔥 Dynamic Text */
+    font-weight: 500;
+}
+
+/* =========================================
+   3. CART PANEL
+   ========================================= */
+.pos-cart-panel {
+    width: 360px;
+    background: var(--bg-surface); /* 🔥 Dynamic Panel BG */
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.02);
+}
+
+.cart-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-surface);
+}
+
+.cart-header h3 {
+    font-size: 1.1rem; 
+    margin: 0; 
+    font-weight: 700;
+    color: var(--text-main); /* 🔥 Fixes Header Text Color */
+}
+
+.count-badge {
+    font-size: 0.8rem; 
+    background: var(--icon-bg); /* 🔥 Fixes Badge BG */
+    padding: 2px 8px; 
+    border-radius: 12px; 
+    color: var(--text-secondary);
+}
+
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--bg-cart-items); /* 🔥 Dynamic List BG */
+}
+
+.cart-item {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: border-color 0.2s;
+}
+
+.cart-item:hover {
+    border-color: var(--primary);
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.item-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main); /* 🔥 Dynamic Text */
+}
+
+.item-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.item-total {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+
+.btn-remove {
+    background: #fee2e2;
+    color: #ef4444;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+/* In dark mode, make the remove button slightly darker so it's not blinding */
+:host-context(body.dark-mode) .btn-remove {
+    background: #450a0a; /* Dark Red Background */
+    color: #fca5a5;       /* Light Red Icon */
+}
+
+.btn-remove:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.empty-cart-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    gap: 10px;
+}
+
+.cart-footer {
+    padding: 24px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.btn-checkout {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-checkout:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-checkout:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.btn-checkout:disabled {
+    background: var(--checkout-disabled);
+    cursor: not-allowed;
+    box-shadow: none;
+    color: var(--text-secondary);
+}
+
+.shortcuts-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* --- RESPONSIVE POS --- */
+@media (max-width: 900px) {
+    .pos-screen-container { flex-direction: column; height: auto; overflow: visible; }
+    .pos-products-area { height: auto; padding: 16px; }
+    .products-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+    
+    .pos-cart-panel { 
+       width: 100%; 
+       height: auto; 
+       border-left: none; 
+       border-top: 2px solid var(--border-color); 
+       position: sticky;
+       bottom: 0;
+       z-index: 20;
+    }
+    .cart-items { max-height: 250px; }
+}
