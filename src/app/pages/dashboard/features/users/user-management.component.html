@@ -11,29 +11,40 @@
     <table>
       <thead>
         <tr>
-          <th>ID</th>
           <th>Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Created At</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let user of users">
-          <td class="mono">{{ user.id }}</td>
-          <td><div style="font-weight:600;">{{ user.name }}</div></td>
+          <td>
+            <div style="font-weight:600;">
+              {{ user.name }} 
+              <span *ngIf="user.email === currentUser.email" style="color:var(--text-muted); font-weight:400; font-size:0.8em;">(You)</span>
+            </div>
+          </td>
           <td>{{ user.email }}</td>
           <td><span class="role-badge">{{ user.role }}</span></td>
+          <td class="mono">{{ user.createdAt || 'N/A' }}</td>
           <td>
-            <div class="status-indicator">
-              <span class="dot" [ngClass]="user.status === 'Active' ? 'green' : 'red'"></span>
-              {{ user.status }}
-            </div>
+             <div class="status-indicator">
+               <span class="dot" [ngClass]="user.status === 'Active' ? 'green' : 'red'"></span>
+               {{ user.status }}
+             </div>
           </td>
           <td>
             <button type="button" *ngIf="currentUser.permissions.canDeleteUsers && user.email !== currentUser.email" class="btn-text-danger" (click)="deleteUser.emit(user.id)">Remove</button>
           </td>
+        </tr>
+
+        <tr *ngIf="users.length === 0">
+            <td colspan="6" style="text-align:center; padding: 2rem; color: var(--text-muted);">
+                No users found.
+            </td>
         </tr>
       </tbody>
     </table>
@@ -109,6 +120,5 @@
 <div class="toast-overlay" *ngIf="showToast">
   <div class="toast-box">
     <span>{{ toastMessage }}</span>
-    <button class="btn-toast-ok" (click)="showToast = false">OK</button>
   </div>
 </div>

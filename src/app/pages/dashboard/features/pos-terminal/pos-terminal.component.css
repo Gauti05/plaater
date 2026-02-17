@@ -70,6 +70,7 @@
     flex-direction: column; 
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    position: relative; /* For veg tag positioning */
 }
 
 .product-card:hover { 
@@ -79,6 +80,36 @@
 }
 
 .product-card:active { transform: scale(0.98); }
+
+/* 🔥 TAGS & BADGES */
+.veg-tag {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    background-color: #22c55e; /* Green for Veg */
+    border: 1px solid #166534;
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 0 1px white;
+}
+.veg-tag.non-veg {
+    background-color: #ef4444; /* Red for Non-Veg */
+    border-color: #991b1b;
+}
+
+.addon-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.05);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
 
 .p-icon { 
     height: 90px; 
@@ -176,7 +207,20 @@
 .item-details {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+}
+
+/* 🔥 CART INDICATOR */
+.veg-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.veg-indicator.non-veg {
+    background-color: #ef4444;
 }
 
 .item-name {
@@ -185,10 +229,55 @@
     color: var(--text-main); /* 🔥 Dynamic Text */
 }
 
-.item-meta {
-    font-size: 0.8rem;
+/* 🔥 ADD-ONS LIST IN CART */
+.item-addons {
+    font-size: 0.75rem;
     color: var(--text-secondary);
-    font-weight: 500;
+    margin-left: 14px; /* Align under name */
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🔥 QTY CONTROLS STYLE */
+.qty-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.btn-qty {
+    background: var(--icon-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.1s;
+}
+.btn-qty:hover {
+    background: var(--border-color);
+}
+.btn-qty:active {
+    transform: scale(0.95);
+}
+
+.qty-val {
+    font-weight: 600;
+    color: var(--text-main);
+    min-width: 16px;
+    text-align: center;
+}
+
+.item-unit-price {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 4px;
 }
 
 .item-actions {
@@ -312,3 +401,66 @@
     }
     .cart-items { max-height: 250px; }
 }
+
+/* 🔥 MODAL STYLES */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background: var(--bg-surface);
+    width: 400px; max-width: 90%;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    border: 1px solid var(--border-color);
+    display: flex; flex-direction: column;
+    animation: slideUp 0.2s ease-out;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h3 { margin: 0; font-size: 1.1rem; color: var(--text-main); }
+.btn-close { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; }
+
+.modal-body { padding: 20px; }
+
+.addon-list { display: flex; flex-direction: column; gap: 10px; }
+.addon-item {
+    display: flex; align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.addon-item:hover { background: var(--bg-cart-items); }
+.addon-item input { margin-right: 12px; width: 16px; height: 16px; }
+.addon-name { flex: 1; font-weight: 500; color: var(--text-main); }
+.addon-price { font-weight: 600; color: var(--primary); }
+
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-color);
+    display: flex; justify-content: flex-end; gap: 12px;
+    background: var(--bg-cart-items);
+    border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+}
+
+.btn-secondary {
+    background: none; border: 1px solid var(--border-color);
+    padding: 8px 16px; border-radius: 6px;
+    color: var(--text-secondary); font-weight: 600; cursor: pointer;
+}
+.btn-primary {
+    background: var(--primary); border: none;
+    padding: 8px 16px; border-radius: 6px;
+    color: white; font-weight: 600; cursor: pointer;
+}
+
+@keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

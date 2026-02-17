@@ -25,42 +25,34 @@
         [mainChartOptions]="mainChartOptions"
         [donutChartOptions]="donutChartOptions"
         [isLoading]="isLoading"
-        
         [currentPage]="currentPage"
         [isLastPage]="isLastPage"
         [itemsPerPage]="itemsPerPage"
         [totalItems]="totalItems" 
-        
         [searchText]="searchText"
         [showFilters]="showFilters"
         [filterStatus]="filterStatus"
         [filterMethod]="filterMethod"
         [filterLocation]="filterLocation"
-        
         (searchChange)="onSearchInput($event)"
         (pageChange)="handlePageChange($event)"
         (itemsPerPageChange)="onItemsPerPageChange($event)"
         (toggleFilters)="toggleFilters($event)"
         (resetFilters)="resetFilters()"
         (addDummyData)="addDummyData()"
-
         (filterStatusChange)="updateFilterStatus($event)"
         (filterMethodChange)="updateFilterMethod($event)"
         (filterLocationChange)="updateFilterLocation($event)"
         (chartFilterChange)="updateChartFilter($event)">
     </app-dashboard-overview>
 
+    <div class="dashboard-container" *ngIf="currentView === 'Stores' || currentView === 'StoreDetails'">
+        <app-store-management [isDarkMode]="isDarkMode"></app-store-management>
+    </div>
+
     <app-crm-view *ngIf="currentView === 'Customers'" [customers]="crmCustomers"></app-crm-view>
 
-    <app-pos-terminal *ngIf="currentView === 'POS'" 
-        [posProducts]="posProducts" 
-        [cart]="cart" 
-        [cartTotal]="cartTotal" 
-        (addToCart)="addToCart($event)" 
-        (removeFromCart)="removeFromCart($event)" 
-        (clearCart)="clearCart()" 
-        (checkout)="processCheckout()">
-    </app-pos-terminal>
+    <app-pos-terminal *ngIf="currentView === 'POS'"></app-pos-terminal>
 
     <app-inventory-manager 
         *ngIf="currentView === 'Inventory'"
@@ -87,6 +79,10 @@
         (saveUser)="submitNewUser($event)" 
         (saveRole)="saveCustomRole($event)">
     </app-user-management>
+
+    <div class="dashboard-container" *ngIf="currentView === 'Tickets'">
+        <app-support-tickets></app-support-tickets>
+    </div>
 
   </main>
 </div>

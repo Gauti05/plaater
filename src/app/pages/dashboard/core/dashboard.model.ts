@@ -80,6 +80,7 @@ export interface ManagedUser {
   email: string;
   role: string;
   status: 'Active' | 'Inactive';
+  createdAt?: string;
 }
 
 export interface CustomRole {
@@ -107,4 +108,18 @@ export interface InventoryItem {
   minStock: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   lastUpdated: string;
+}
+
+export interface Store {
+  id: string;
+  name: string;
+  location: string;
+  manager: string;
+  contact: string;
+  status: 'Open' | 'Closed' | 'Renovation';
+  revenue: number;
+  plan: string;
+  licenseKey: string;
+  slug: string;
+  updatedAt: string
 }

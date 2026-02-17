@@ -1,0 +1,376 @@
+<div class="theme-wrapper" [class.dark-mode]="isDarkMode">
+
+    <div class="store-container" *ngIf="viewMode === 'LIST'">
+        <div class="tile">
+            <div class="tile-header">
+                <h3>Global Store Network</h3>
+                <div class="actions-row">
+                    <div class="search-group">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Search by Name or License..." [(ngModel)]="searchText">
+                    </div>
+                    <button class="btn-refresh" (click)="openMasterCatalog()" title="Master Catalog" style="margin-right: 5px;">📖 Catalog</button>
+                    
+                    <button class="btn-refresh" (click)="openAuditLogs()" title="System Audit Logs">🛡️ Logs</button>
+                    <button class="btn-refresh" (click)="fetchStores()" title="Refresh List">🔄</button>
+                    <button class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 15px; font-weight:600;" (click)="openCreateStoreModal()">+ Create Store</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th style="width: 30%;">Store Name</th><th>License Key</th><th>Plan</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                    <tbody>
+                        <tr *ngFor="let store of filteredStores" (click)="viewDetails(store)" class="clickable-row">
+                            <td><div class="store-name">{{ store.name }}</div><div class="store-id">{{ store.slug }}</div></td>
+                            <td class="mono-text">{{ store.licenseKey }}</td><td><span class="plan-tag">{{ store.plan }}</span></td>
+                            <td><span class="status-pill" [class.open]="store.status === 'Open'" [class.closed]="store.status === 'Closed'">{{ store.status | uppercase }}</span></td>
+                            <td class="text-right"><button class="action-btn">➔</button></td>
+                        </tr>
+                        <tr *ngIf="!isLoading && stores.length === 0"><td colspan="5" class="center-msg">No stores found.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="store-container" *ngIf="viewMode === 'MASTER_CATALOG'">
+        <div class="detail-nav">
+            <button class="btn-back" (click)="backToList()">← Back to Dashboard</button>
+            <span class="detail-id">Global Product Database</span>
+        </div>
+        <div class="tile">
+            <div class="tile-header">
+                <div>
+                    <h3>Master Catalog</h3>
+                    <p class="slug-text">Manage global products and push them to specific stores.</p>
+                </div>
+                <button class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 20px; font-weight:600;" (click)="openAddItemModal()">+ Add Product</button>
+            </div>
+            <div class="table-responsive">
+                <table *ngIf="!isCatalogLoading">
+                    <thead style="background:var(--bg-surface);">
+                        <tr><th>Product Name</th><th>Category</th><th>Price</th><th>Type</th><th class="text-right">Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of masterItems">
+                            <td style="font-weight:600;">{{ item.name }}</td>
+                            <td>{{ item.category }}</td>
+                            <td class="money">{{ item.price | currency:'INR' }}</td>
+                            <td>
+                                <span class="status-pill" [style.background]="item.type === 'veg' ? '#dcfce7' : '#fee2e2'" [style.color]="item.type === 'veg' ? '#166534' : '#991b1b'">
+                                    {{ item.type | uppercase }}
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <button class="action-btn" style="background: #e0e7ff; color: #3730a3; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;" (click)="openPushModal(item)">
+                                    🚀 Push to Store
+                                </button>
+                            </td>
+                        </tr>
+                        <tr *ngIf="masterItems.length === 0"><td colspan="5" class="center-msg">No master items found.</td></tr>
+                    </tbody>
+                </table>
+                <div *ngIf="isCatalogLoading" class="loading-box">Loading catalog...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="store-container" *ngIf="viewMode === 'DETAILS' && selectedStore">
+        <div class="detail-nav"><button class="btn-back" (click)="backToList()">← Back to Store List</button><span class="detail-id">Store ID: {{ selectedStore.id }}</span></div>
+        <div class="tile detail-card">
+            <div class="detail-header">
+                <div class="header-left"><div class="store-icon">{{ selectedStore.name.charAt(0) }}</div><div><h1>{{ selectedStore.name }}</h1><p class="slug-text">@{{ selectedStore.slug }}</p></div></div>
+                <div class="header-right"><span class="status-pill large" [class.open]="selectedStore.status === 'Open'" [class.closed]="selectedStore.status === 'Closed'">{{ selectedStore.status }}</span></div>
+            </div>
+            <hr class="divider">
+            <div class="detail-layout">
+                <div class="info-column">
+                    <div class="info-group"><h3>Business Details</h3><div class="info-row"><label>License Key</label><div class="val mono-text">{{ selectedStore.licenseKey }}</div></div><div class="info-row"><label>Current Plan</label><div class="val plan-highlight">{{ selectedStore.plan }}</div></div><div class="info-row"><label>Last Updated</label><div class="val">{{ selectedStore.updatedAt }}</div></div></div>
+                    <div class="info-group"><h3>Operations</h3><div class="info-row"><label>Manager</label><div class="val">{{ selectedStore.manager }}</div></div><div class="info-row"><label>Contact</label><div class="val">{{ selectedStore.contact }}</div></div><div class="info-row"><label>Location</label><div class="val">{{ selectedStore.location }}</div></div></div>
+                </div>
+                <div class="stats-column">
+                    <h3>Store Data (Click to View)</h3>
+                    <div class="stats-grid" *ngIf="!storeStats.loading; else loadingStats">
+                        <div class="stat-card clickable" (click)="openSubView('customers')"><div class="stat-label">Customers</div><div class="stat-value">{{ storeStats.customers }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('orders')"><div class="stat-label">Orders</div><div class="stat-value">{{ storeStats.orders }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('menuItems')"><div class="stat-label">Menu Items</div><div class="stat-value">{{ storeStats.menuItems }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('menuCategories')"><div class="stat-label">Categories</div><div class="stat-value">{{ storeStats.menuCategories }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('modifiers')"><div class="stat-label">Modifiers</div><div class="stat-value">{{ storeStats.modifiers }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('purchaseOrders')"><div class="stat-label">Purchases</div><div class="stat-value">{{ storeStats.purchaseOrders }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('rawMaterials')"><div class="stat-label">Raw Materials</div><div class="stat-value">{{ storeStats.rawMaterials }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('suppliers')"><div class="stat-label">Suppliers</div><div class="stat-value">{{ storeStats.suppliers }}</div></div>
+                        <div class="stat-card clickable" (click)="openSubView('tables')"><div class="stat-label">Tables</div><div class="stat-value">{{ storeStats.tables }}</div></div>
+                        
+                        <div class="stat-card clickable" style="border-color:#10b981; background:#f0fdf4;" (click)="openBilling()">
+                            <div class="stat-label" style="color:#10b981;">Subscription</div>
+                            <div class="stat-value" style="font-size:1.2rem;">💳 Billing</div>
+                        </div>
+
+                        <div class="stat-card clickable" style="border-color:#2563eb; background:#eff6ff;" (click)="openSettings()"><div class="stat-label" style="color:#2563eb;">Configuration</div><div class="stat-value" style="font-size:1.2rem;">⚙️ Settings</div></div>
+                    </div>
+                    <ng-template #loadingStats><div class="loading-box">Checking Database...</div></ng-template>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="store-container" *ngIf="viewMode === 'SUBVIEW' && selectedStore"><div class="detail-nav"><button class="btn-back" (click)="backToDetails()">← Back to {{ selectedStore.name }}</button><span class="detail-id">{{ activeSubView | titlecase }} Database</span></div><div class="tile"><div class="tile-header"><h3>{{ activeSubView | titlecase }} List</h3><span class="count-badge">{{ subViewData.length }} Records</span></div><div class="table-responsive"><table *ngIf="activeSubView === 'customers'"><thead><tr><th>Name</th><th>Mobile</th><th>Last Visited</th><th>History</th></tr></thead><tbody><tr *ngFor="let item of subViewData"><td style="font-weight:600; cursor:pointer; color:#2563eb;" (click)="viewCustomerHistory(item)">{{ item.name || 'Unknown' }}</td><td class="mono-text">{{ item.mobile || item.id }}</td><td>{{ formatDate(item.lastVisited) }}</td><td><button class="action-btn" (click)="viewCustomerHistory(item)">📜</button></td></tr></tbody></table><table *ngIf="activeSubView === 'orders'"><thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th class="text-right">Action</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewOrder(item)" class="clickable-row"><td class="mono-text">{{ item.id | slice:0:8 }}</td><td>{{ item.customerName || 'Guest' }}</td><td class="money">{{ item.total | currency:'INR' }}</td><td><span class="status-pill">{{ item.status || 'Unknown' }}</span></td><td>{{ formatDate(item.createdAt) }}</td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'menuItems'"><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th class="text-right">Action</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewMenuItem(item)" class="clickable-row"><td><b>{{ item['name'] }}</b></td><td>{{ item['category'] || 'General' }}</td><td>{{ item['price'] | currency:'INR' }}</td><td><span class="status-pill" [class.open]="item.isActive" [class.closed]="!item.isActive">{{ item.isActive ? 'Active' : 'Inactive' }}</span></td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'modifiers'"><thead><tr><th>Name</th><th>Type</th><th>Status</th><th class="text-right">Action</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewModifier(item)" class="clickable-row"><td style="font-weight:600">{{ item.name || 'Unnamed' }}</td><td><span class="plan-tag">{{ item.type | titlecase }}</span></td><td><span class="status-pill" [class.open]="item.isActive" [class.closed]="!item.isActive">{{ item.isActive ? 'Active' : 'Inactive' }}</span></td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'menuCategories'"><thead><tr><th>Category Name</th><th>ID</th></tr></thead><tbody><tr *ngFor="let item of subViewData"><td style="font-weight:600">{{ item.name }}</td><td class="mono-text">{{ item.id }}</td></tr></tbody></table><table *ngIf="activeSubView === 'purchaseOrders'"><thead><tr><th>PO Number</th><th>Supplier</th><th>Items</th><th>Grand Total</th><th>Status</th><th>Date</th><th class="text-right">View</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewPurchaseOrder(item)" class="clickable-row"><td class="mono-text">{{ item.poNumber || item.id }}</td><td><div style="font-weight:600;">{{ item.supplierName || 'Unknown' }}</div><div style="font-size:0.75rem; color:#64748b;" *ngIf="item.notes">{{ item.notes }}</div></td><td style="text-align:center;">{{ item.items?.length || 0 }}</td><td class="money">{{ item.grandTotal | currency:'INR' }}</td><td><span class="status-pill" [style.background]="item.status === 'draft' ? '#f3f4f6' : ''" [style.color]="item.status === 'draft' ? '#4b5563' : ''">{{ item.status | uppercase }}</span></td><td>{{ formatDate(item.poDate) }}</td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'rawMaterials'"><thead><tr><th>Material Name</th><th>Current Stock</th><th>Unit</th><th>Cost/Unit</th><th class="text-right">Action</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewRawMaterial(item)" class="clickable-row"><td style="font-weight:600">{{ item.name }}</td><td [style.color]="item.stock < item.lowStockLimit ? 'red' : 'inherit'" style="font-weight:600;">{{ item.stock }}<span *ngIf="item.stock < item.lowStockLimit" style="font-size:0.7rem; background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; margin-left:5px;">LOW</span></td><td>{{ item.unit }}</td><td>{{ item.costPerUnit | currency:'INR' }}</td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'suppliers'"><thead><tr><th>Supplier Name</th><th>Contact Person</th><th>Phone</th><th>Email</th><th>Items</th><th class="text-right">View</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewSupplier(item)" class="clickable-row"><td style="font-weight:600;">{{ item.name }}<div style="font-size:0.75rem; color:#64748b;">{{ item.address }}</div></td><td>{{ item.contactName || '-' }}</td><td class="mono-text">{{ item.phone }}</td><td>{{ item.email }}</td><td><span class="count-badge">{{ item.associatedItems?.length || 0 }}</span></td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><table *ngIf="activeSubView === 'tables'"><thead><tr><th>Table No</th><th>Capacity</th><th>Status</th><th>Current Order</th><th class="text-right">Action</th></tr></thead><tbody><tr *ngFor="let item of subViewData" (click)="viewTable(item)" class="clickable-row"><td style="font-weight:bold; font-size:1.1rem;">#{{ item.number }}</td><td>{{ item.capacity }} Pax</td><td><span class="status-pill" [class.open]="!item.isOccupied" [class.closed]="item.isOccupied">{{ item.isOccupied ? 'Occupied' : 'Available' }}</span></td><td class="mono-text small">{{ item.orderId || '-' }}</td><td class="text-right"><button class="action-btn">👁️</button></td></tr></tbody></table><div *ngIf="!isSubLoading && subViewData.length === 0" class="center-msg">No data found.</div><div *ngIf="isSubLoading" class="center-msg">Fetching data...</div></div></div></div>
+    
+    <div class="store-container" *ngIf="viewMode === 'CUSTOMER_HISTORY' && selectedCustomer"><div class="detail-nav"><button class="btn-back" (click)="backToCustomers()">← Back to Customer List</button><span class="detail-id">Mobile: {{ selectedCustomer.mobile }}</span></div><div class="tile"><div class="tile-header"><div><h3>{{ selectedCustomer.name }}'s Order History</h3><div style="font-size:0.8rem; color:#64748b; margin-top:4px;">Total Orders: {{ customerOrders.length }}</div></div></div><div class="table-responsive"><table><thead><tr><th>Order ID</th><th>Amount</th><th>Status</th><th>Date</th><th class="text-right">View</th></tr></thead><tbody><tr *ngFor="let order of customerOrders" (click)="viewOrder(order)" class="clickable-row"><td class="mono-text">{{ order.id | slice:0:8 }}</td><td class="money">{{ order.total | currency:'INR' }}</td><td><span class="status-pill" [class.open]="order.status === 'Paid'" [class.closed]="order.status !== 'Paid'">{{ order.status || 'Unknown' }}</span></td><td>{{ formatDate(order.createdAt) }}</td><td class="text-right"><button class="action-btn">👁️</button></td></tr><tr *ngIf="!isSubLoading && customerOrders.length === 0"><td colspan="5" class="center-msg">No past orders found.</td></tr></tbody></table><div *ngIf="isSubLoading" class="center-msg">Loading history...</div></div></div></div>
+    
+    <div class="store-container" *ngIf="viewMode === 'ORDER_DETAIL' && selectedOrder"><div class="detail-nav"><button class="btn-back" (click)="selectedCustomer ? viewCustomerHistory(selectedCustomer) : backToOrders()">← Back</button><span class="detail-id">Order ID: {{ selectedOrder.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div><h1>Order #{{ selectedOrder.id | slice:0:8 }}</h1><p class="slug-text">{{ formatDate(selectedOrder.createdAt) }} • {{ selectedOrder.orderType || 'Dine-In' }}</p></div><div style="text-align:right;"><span class="status-pill large" [class.open]="selectedOrder.status === 'Paid'" [class.closed]="selectedOrder.status !== 'Paid'">{{ selectedOrder.status }}</span><div class="val money" style="margin-top:10px; font-size:1.5rem;">{{ selectedOrder.total | currency:'INR' }}</div></div></div><hr class="divider"><div class="detail-layout"><div class="info-column" style="grid-column: span 2;"><h3>Order Items</h3><div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px;"><table *ngIf="selectedOrder.items && selectedOrder.items.length > 0"><thead style="background:#f8fafc;"><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr></thead><tbody><tr *ngFor="let item of selectedOrder.items"><td><div style="font-weight:600;">{{ item.name }}</div><div style="font-size:0.8rem; color:#64748b;">{{ item.category }}</div></td><td class="text-right">{{ item.quantity }}</td><td class="text-right">{{ item.basePrice | currency:'INR' }}</td><td class="text-right" style="font-weight:700;">{{ (item.price * item.quantity) | currency:'INR' }}</td></tr></tbody></table></div></div><div class="stats-column"><h3>Customer Info</h3><div class="stat-card" style="text-align:left;"><div class="info-row"><label>Name</label><div class="val">{{ selectedOrder.customerName || 'Guest' }}</div></div><div class="info-row"><label>Mobile</label><div class="val mono-text">{{ selectedOrder.customerMobile || 'N/A' }}</div></div></div><h3 style="margin-top:20px;">Summary</h3><div class="stat-card" style="text-align:left; background:#fff; border-color:#e2e8f0;"><div class="info-row" style="display:flex; justify-content:space-between;"><span style="color:#64748b;">Subtotal</span><span>{{ selectedOrder.subtotal | currency:'INR' }}</span></div><div class="info-row" style="display:flex; justify-content:space-between;"><span style="color:#64748b;">Tax</span><span>{{ selectedOrder.tax | currency:'INR' }}</span></div><hr style="margin:10px 0; border-top:1px dashed #cbd5e1;"><div class="info-row" style="display:flex; justify-content:space-between; font-weight:700; font-size:1.2rem; color:#0f172a;"><span>Total</span><span>{{ selectedOrder.total | currency:'INR' }}</span></div></div></div></div></div></div>
+    
+    <div class="store-container" *ngIf="viewMode === 'MENU_ITEM_DETAIL' && selectedMenuItem"><div class="detail-nav"><button class="btn-back" (click)="backToMenuItems()">← Back to Menu List</button><span class="detail-id">Item ID: {{ selectedMenuItem.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div class="header-left"><img *ngIf="selectedMenuItem.imageUrl" [src]="selectedMenuItem.imageUrl" alt="Food Image" class="menu-item-image"><div *ngIf="!selectedMenuItem.imageUrl" class="store-icon" style="background:#f59e0b;">{{ selectedMenuItem.name.charAt(0) }}</div><div><h1>{{ selectedMenuItem.name }}</h1><p class="slug-text">{{ selectedMenuItem.category }} • {{ selectedMenuItem.type | titlecase }}</p></div></div><div style="text-align:right;"><span class="status-pill large" [class.open]="selectedMenuItem.isActive" [class.closed]="!selectedMenuItem.isActive">{{ selectedMenuItem.isActive ? 'Active' : 'Inactive' }}</span><div class="val money" style="margin-top:10px; font-size:1.5rem;">{{ selectedMenuItem.price | currency:'INR' }}</div></div></div><hr class="divider"><div class="detail-layout"><div class="info-column"><div class="info-group"><h3>Item Configuration</h3><div class="info-row"><label>Category</label><div class="val">{{ selectedMenuItem.category }}</div></div><div class="info-row"><label>Inventory Tracking</label><div class="val" [style.color]="selectedMenuItem.trackInventory ? '#059669' : '#64748b'">{{ selectedMenuItem.trackInventory ? 'Enabled ✅' : 'Disabled ❌' }}</div></div></div></div><div class="stats-column"><h3>Recipe</h3><div *ngIf="selectedMenuItem.recipe && selectedMenuItem.recipe.length > 0; else noRecipe"><div class="stat-card" style="text-align:left;"><ul style="padding-left:20px; margin:0; color:#334155;"><li *ngFor="let r of selectedMenuItem.recipe"><span style="font-weight:500;">{{ r.name || r.itemName || r }}</span><span *ngIf="r.quantity" style="color:#64748b;"> - {{ r.quantity }} {{ r.unit }}</span></li></ul></div></div><ng-template #noRecipe><div class="loading-box">No recipe defined.</div></ng-template></div></div></div></div>
+    <div class="store-container" *ngIf="viewMode === 'PURCHASE_ORDER_DETAIL' && selectedPurchaseOrder"><div class="detail-nav"><button class="btn-back" (click)="selectedSupplier ? viewSupplier(selectedSupplier) : backToPurchaseOrders()">← Back</button><span class="detail-id">PO: {{ selectedPurchaseOrder.poNumber || selectedPurchaseOrder.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div><h1>PO #{{ selectedPurchaseOrder.poNumber }}</h1><p class="slug-text">{{ formatDate(selectedPurchaseOrder.poDate) }} • {{ selectedPurchaseOrder.supplierName }}</p></div><div style="text-align:right;"><span class="status-pill large" [style.background]="selectedPurchaseOrder.status === 'draft' ? '#e2e8f0' : '#dcfce7'" [style.color]="selectedPurchaseOrder.status === 'draft' ? '#475569' : '#166534'">{{ selectedPurchaseOrder.status | uppercase }}</span><div class="val money" style="margin-top:10px; font-size:1.5rem;">{{ selectedPurchaseOrder.grandTotal | currency:'INR' }}</div></div></div><hr class="divider"><div class="detail-layout"><div class="info-column" style="grid-column: span 2;"><h3>Purchased Items</h3><div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px;"><table *ngIf="selectedPurchaseOrder.items && selectedPurchaseOrder.items.length > 0"><thead style="background:#f8fafc;"><tr><th>Item Name</th><th>Type</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Tax (%)</th><th class="text-right">Total</th></tr></thead><tbody><tr *ngFor="let item of selectedPurchaseOrder.items"><td><div style="font-weight:600;">{{ item.itemName }}</div></td><td><span class="plan-tag">{{ item.type }}</span></td><td class="text-right">{{ item.quantity }} {{ item.unit }}</td><td class="text-right">{{ item.price | currency:'INR' }}</td><td class="text-right">{{ item.gstPercent }}%</td><td class="text-right" style="font-weight:700;">{{ item.total | currency:'INR' }}</td></tr></tbody></table></div></div><div class="stats-column"><h3>Supplier Details</h3><div class="stat-card" style="text-align:left;"><div class="info-row"><label>Supplier</label><div class="val">{{ selectedPurchaseOrder.supplierName }}</div></div><div class="info-row"><label>Notes</label><div class="val" style="font-size:0.9rem; color:#64748b;">{{ selectedPurchaseOrder.notes || 'No notes provided.' }}</div></div></div><h3 style="margin-top:20px;">Financial Summary</h3><div class="stat-card" style="text-align:left; background:#fff; border-color:#e2e8f0;"><div class="info-row" style="display:flex; justify-content:space-between;"><span style="color:#64748b;">Subtotal</span><span>{{ selectedPurchaseOrder.subtotal | currency:'INR' }}</span></div><div class="info-row" style="display:flex; justify-content:space-between;"><span style="color:#64748b;">GST Total</span><span>{{ selectedPurchaseOrder.gstTotal | currency:'INR' }}</span></div><hr style="margin:10px 0; border-top:1px dashed #cbd5e1;"><div class="info-row" style="display:flex; justify-content:space-between; font-weight:700; font-size:1.2rem; color:#0f172a;"><span>Grand Total</span><span>{{ selectedPurchaseOrder.grandTotal | currency:'INR' }}</span></div></div></div></div></div></div>
+    <div class="store-container" *ngIf="viewMode === 'SUPPLIER_DETAIL' && selectedSupplier"><div class="detail-nav"><button class="btn-back" (click)="backToSuppliers()">← Back to Suppliers</button><span class="detail-id">Supplier ID: {{ selectedSupplier.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div class="header-left"><div class="store-icon" style="background:#8b5cf6;">{{ selectedSupplier.name.charAt(0) }}</div><div><h1>{{ selectedSupplier.name }}</h1><p class="slug-text">Contact: {{ selectedSupplier.contactName }}</p></div></div><div class="header-right"><span class="status-pill large" [class.open]="selectedSupplier.isActive" [class.closed]="!selectedSupplier.isActive">{{ selectedSupplier.isActive ? 'ACTIVE' : 'INACTIVE' }}</span></div></div><hr class="divider"><div class="detail-layout"><div class="info-column"><div class="info-group"><h3>Contact Information</h3><div class="info-row"><label>Phone</label><div class="val mono-text">{{ selectedSupplier.phone }}</div></div><div class="info-row"><label>Email</label><div class="val">{{ selectedSupplier.email }}</div></div><div class="info-row"><label>Address</label><div class="val">{{ selectedSupplier.address }}</div></div></div></div><div class="stats-column"><h3>Supply Stats</h3><div class="stats-grid"><div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value">{{ supplierPurchaseOrders.length }}</div></div><div class="stat-card"><div class="stat-label">Associated Items</div><div class="stat-value">{{ selectedSupplier.associatedItems?.length || 0 }}</div></div></div></div></div><div style="margin-top:40px;"><h3>Purchase Order History</h3><div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px;"><table><thead style="background:#f8fafc;"><tr><th>PO Number</th><th>Date</th><th>Total</th><th>Status</th><th>Action</th></tr></thead><tbody><tr *ngFor="let po of supplierPurchaseOrders" (click)="viewPurchaseOrder(po)" class="clickable-row"><td class="mono-text">{{ po.poNumber }}</td><td>{{ formatDate(po.poDate) }}</td><td class="money">{{ po.grandTotal | currency:'INR' }}</td><td><span class="status-pill" [style.background]="po.status === 'draft' ? '#f3f4f6' : ''">{{ po.status | uppercase }}</span></td><td><button class="action-btn">➔</button></td></tr><tr *ngIf="!isSubLoading && supplierPurchaseOrders.length === 0"><td colspan="5" class="center-msg">No purchase history available for this supplier.</td></tr><tr *ngIf="isSubLoading"><td colspan="5" class="center-msg">Loading history...</td></tr></tbody></table></div></div></div></div>
+    <div class="store-container" *ngIf="viewMode === 'RAW_MATERIAL_DETAIL' && selectedRawMaterial"><div class="detail-nav"><button class="btn-back" (click)="backToRawMaterials()">← Back to Raw Materials</button><span class="detail-id">Item ID: {{ selectedRawMaterial.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div><h1>{{ selectedRawMaterial.name }}</h1><p class="slug-text">{{ selectedRawMaterial.category || 'General' }}</p></div><div style="text-align:right;"><span class="status-pill large" [class.open]="selectedRawMaterial.stock >= selectedRawMaterial.lowStockThreshold" [class.closed]="selectedRawMaterial.stock < selectedRawMaterial.lowStockThreshold">{{ selectedRawMaterial.stock < selectedRawMaterial.lowStockThreshold ? 'LOW STOCK' : 'IN STOCK' }}</span><div class="val money" style="margin-top:10px; font-size:1.5rem;">{{ selectedRawMaterial.stock }} {{ selectedRawMaterial.unit }}</div></div></div><hr class="divider"><div class="detail-layout"><div class="info-column"><div class="info-group"><h3>Inventory Details</h3><div class="info-row"><label>Cost Per Unit</label><div class="val">{{ selectedRawMaterial.costPerUnit | currency:'INR' }} / {{ selectedRawMaterial.unit }}</div></div><div class="info-row"><label>Total Inventory Value</label><div class="val">{{ selectedRawMaterial.inventoryValue | currency:'INR' }}</div></div><div class="info-row"><label>Low Stock Threshold</label><div class="val" style="color:#ef4444;">{{ selectedRawMaterial.lowStockThreshold }} {{ selectedRawMaterial.unit }}</div></div></div></div><div class="stats-column"><h3>Suppliers</h3><div *ngIf="rawMaterialSuppliers.length > 0; else noSuppliers" class="stat-card" style="text-align:left;"><ul style="padding-left:20px; margin:0; color:#334155;"><li *ngFor="let s of rawMaterialSuppliers"><span style="font-weight:600; color:#2563eb; cursor:pointer;" (click)="viewSupplier(s)">{{ s.name }}</span><span style="color:#64748b;"> ({{ s.contactName }})</span></li></ul></div><ng-template #noSuppliers><div class="loading-box">No linked suppliers found.</div></ng-template></div></div></div></div>
+    <div class="store-container" *ngIf="viewMode === 'TABLE_DETAIL' && selectedTable"><div class="detail-nav"><button class="btn-back" (click)="backToTables()">← Back to Tables</button><span class="detail-id">Table ID: {{ selectedTable.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div><h1>Table #{{ selectedTable.number }}</h1><p class="slug-text">Capacity: {{ selectedTable.capacity }} Guests</p></div><div style="text-align:right;"><span class="status-pill large" [class.open]="!selectedTable.isOccupied" [class.closed]="!selectedTable.isOccupied">{{ selectedTable.isOccupied ? 'OCCUPIED' : 'AVAILABLE' }}</span></div></div><hr class="divider"><div *ngIf="selectedTable.isOccupied; else emptyTableState"><div class="detail-layout"><div class="info-column"><div class="info-group"><h3>Current Session</h3><div class="info-row"><label>Order ID</label><div class="val mono-text">{{ selectedTable.orderId }}</div></div><div class="info-row"><label>Waiter</label><div class="val">{{ selectedTable.waiter || 'Not Assigned' }}</div></div><div class="info-row"><label>Status</label><div class="val">{{ selectedTable.status }}</div></div></div></div><div class="stats-column"><h3>Live Order Summary</h3><div *ngIf="tableLiveOrder; else loadingOrder" class="stat-card" style="text-align:left;"><div class="info-row" style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="font-weight:600;">Customer:</span><span>{{ tableLiveOrder.customerName || 'Guest' }}</span></div><div class="info-row" style="display:flex; justify-content:space-between; margin-bottom:10px;"><span style="font-weight:600;">Total Amount:</span><span class="money">{{ tableLiveOrder.total | currency:'INR' }}</span></div><button class="action-btn" style="width:100%; margin-top:10px; padding:8px; background:#e0e7ff; color:#3730a3; border-radius:6px; font-weight:600;" (click)="viewOrder(tableLiveOrder)">View Full Order ➔</button></div><ng-template #loadingOrder><div class="loading-box">Fetching order details...</div></ng-template></div></div></div><ng-template #emptyTableState><div class="center-msg" style="padding: 4rem;"><div style="font-size:3rem; margin-bottom:1rem;">🍽️</div><h3>This table is currently empty.</h3><p style="color:#64748b;">No active orders or sessions.</p></div></ng-template></div></div>
+    <div class="store-container" *ngIf="viewMode === 'MODIFIER_DETAIL' && selectedModifier"><div class="detail-nav"><button class="btn-back" (click)="backToModifiers()">← Back to Modifiers</button><span class="detail-id">ID: {{ selectedModifier.id }}</span></div><div class="tile detail-card"><div class="detail-header"><div><h1>{{ selectedModifier.name }}</h1><p class="slug-text">{{ selectedModifier.type | titlecase }} Group</p></div><div style="text-align:right;"><span class="status-pill large" [class.open]="selectedModifier.isActive" [class.closed]="!selectedModifier.isActive">{{ selectedModifier.isActive ? 'ACTIVE' : 'INACTIVE' }}</span></div></div><hr class="divider"><div class="detail-layout"><div class="info-column" style="grid-column: span 2;"><h3>Modifier Options</h3><div class="table-responsive" style="border: 1px solid #e2e8f0; border-radius: 8px;"><table *ngIf="selectedModifier.options && selectedModifier.options.length > 0"><thead style="background:#f8fafc;"><tr><th>Option Label</th><th class="text-right">Extra Price</th></tr></thead><tbody><tr *ngFor="let opt of selectedModifier.options"><td style="font-weight:600;">{{ opt.label }}</td><td class="text-right" [style.color]="opt.price > 0 ? '#059669' : '#64748b'">{{ opt.price > 0 ? ('+' + (opt.price | currency:'INR')) : 'Free' }}</td></tr></tbody></table><div *ngIf="!selectedModifier.options || selectedModifier.options.length === 0" class="center-msg" style="padding:2rem;">No options defined.</div></div></div><div class="stats-column"><h3>Linked Menu Items</h3><div class="stat-card" style="text-align:left;"><div class="stat-label">Used By</div><div class="stat-value">{{ selectedModifier.associatedMenuItems?.length || 0 }} Items</div><div style="margin-top:10px; max-height:150px; overflow-y:auto;"><ul style="padding-left:20px; margin:0; font-size:0.85rem; color:#64748b;"><li *ngFor="let itemId of selectedModifier.associatedMenuItems" class="mono-text">{{ itemId }}</li></ul><div *ngIf="!selectedModifier.associatedMenuItems || selectedModifier.associatedMenuItems.length === 0" style="font-style:italic; color:#94a3b8;">Not linked to any menu items.</div></div></div></div></div></div></div>
+
+    <div class="store-container" *ngIf="viewMode === 'SETTINGS' && selectedStore">
+        <div class="detail-nav">
+            <button class="btn-back" (click)="backToStoreDetails()">← Back to Dashboard</button>
+            <span class="detail-id">Config ID: customisation</span>
+        </div>
+    
+        <div class="tile detail-card" *ngIf="!isSettingsLoading; else loadingSettings">
+            <div class="detail-header">
+                <div>
+                    <h1>Store Configuration</h1>
+                    <p class="slug-text">Manage receipts, tax rules, and operational toggles.</p>
+                </div>
+                <div style="text-align:right;">
+                    <button class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 20px; font-weight:600;" (click)="saveSettings()">
+                        {{ isSavingSettings ? 'Saving...' : 'Save Changes' }}
+                    </button>
+                </div>
+            </div>
+    
+            <hr class="divider">
+    
+            <div class="detail-layout" *ngIf="storeSettings">
+                
+                <div class="info-column">
+                    <div class="info-group">
+                        <h3>Receipt Customization</h3>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Receipt Header</label>
+                            <input type="text" [(ngModel)]="storeSettings.receiptHeader" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px; width:100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Receipt Footer</label>
+                            <input type="text" [(ngModel)]="storeSettings.receiptFooter" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px; width:100%;">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:10px; margin-bottom:15px;">
+                            <input type="checkbox" [(ngModel)]="storeSettings.showLogoOnReceipt" style="width:18px; height:18px;">
+                            <label style="font-size:0.9rem; color:#0f172a;">Show Logo on Receipt</label>
+                        </div>
+                    </div>
+    
+                    <div class="info-group" style="margin-top:30px;">
+                        <h3>Branding</h3>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                            <div class="form-group">
+                                <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Theme Color</label>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <input type="color" [(ngModel)]="storeSettings.themeColor" style="height:40px; width:60px; border:none; background:none;">
+                                    <span class="mono-text">{{ storeSettings.themeColor }}</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Accent Color</label>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <input type="color" [(ngModel)]="storeSettings.accentColor" style="height:40px; width:60px; border:none; background:none;">
+                                    <span class="mono-text">{{ storeSettings.accentColor }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:10px; margin-top:15px;">
+                            <input type="checkbox" [(ngModel)]="storeSettings.darkMode" style="width:18px; height:18px;">
+                            <label style="font-size:0.9rem; color:#0f172a;">Enable Dark Mode Default</label>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="stats-column">
+                    <div class="info-group">
+                        <h3>Operational Toggles</h3>
+                        <div class="stat-card" style="text-align:left; display:flex; flex-direction:column; gap:10px;">
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+                                <span style="font-weight:700; color:#0f172a;">Store Status (Open/Closed)</span>
+                                <label class="switch">
+                                    <input type="checkbox" [(ngModel)]="storeSettings.isStoreOpen" (change)="onStoreStatusToggle()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+    
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Accepting Orders</span>
+                                <label class="switch">
+                                    <input type="checkbox" [(ngModel)]="storeSettings.enableOrdering" (change)="onOrderingToggle()">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+    
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Enable Dine-In</span>
+                                <label class="switch">
+                                    <input type="checkbox" [(ngModel)]="storeSettings.enableDineIn">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Enable Takeaway</span>
+                                <label class="switch">
+                                    <input type="checkbox" [(ngModel)]="storeSettings.enableTakeaway">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span>Enable Delivery</span>
+                                <label class="switch">
+                                    <input type="checkbox" [(ngModel)]="storeSettings.enableDelivery">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="info-group" style="margin-top:30px;">
+                        <h3>Tax Configuration</h3>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Tax Name (e.g. GST, VAT)</label>
+                            <input type="text" [(ngModel)]="storeSettings.taxName" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px; width:100%;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:15px;">
+                            <label style="display:block; font-size:0.85rem; color:#64748b; margin-bottom:5px;">Tax Percentage (%)</label>
+                            <input type="number" [(ngModel)]="storeSettings.taxPercentage" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px; width:100%;">
+                        </div>
+                        <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:10px;">
+                            <input type="checkbox" [(ngModel)]="storeSettings.taxInclusive" style="width:18px; height:18px;">
+                            <label style="font-size:0.9rem; color:#0f172a;">Prices Include Tax</label>
+                        </div>
+                    </div>
+                </div>
+    
+            </div>
+        </div>
+        <ng-template #loadingSettings><div class="loading-box">Loading configuration...</div></ng-template>
+    </div>
+
+    <div class="store-container" *ngIf="viewMode === 'BILLING' && selectedStore">
+        <div class="detail-nav"><button class="btn-back" (click)="backToStoreDetails()">← Back to Dashboard</button><span class="detail-id">Plan: {{ selectedStore.plan }}</span></div>
+        <div class="tile detail-card">
+            <div class="detail-header"><div><h1>Subscription & Billing</h1><p class="slug-text">Manage your plan and view invoice history.</p></div><div class="header-right"><span class="plan-tag" style="font-size:1rem; padding:8px 16px;">Current Plan: {{ selectedStore.plan }}</span></div></div>
+            <hr class="divider">
+            <div class="billing-section">
+                <h3>Available Plans</h3>
+                <div class="plans-grid">
+                    <div class="plan-card" *ngFor="let plan of availablePlans" [class.active-plan]="selectedStore.plan === plan.name">
+                        <div class="plan-header"><h4>{{ plan.name }}</h4><div class="plan-price">{{ plan.price === 0 ? 'Free' : (plan.price | currency:'INR') }} <span class="period">/ {{ plan.duration }}</span></div></div>
+                        <ul class="plan-features"><li *ngFor="let feat of plan.features">✓ {{ feat }}</li></ul>
+                        <button class="plan-btn" [disabled]="selectedStore.plan === plan.name || isBillingLoading" (click)="changePlan(plan)">{{ selectedStore.plan === plan.name ? 'Current Plan' : (plan.price > 0 ? 'Upgrade' : 'Downgrade') }}</button>
+                    </div>
+                </div>
+            </div>
+            <div class="billing-section" style="margin-top:40px;">
+                <h3>Invoice History</h3>
+                <div class="table-responsive" style="border: 1px solid var(--border-color); border-radius: 8px;">
+                    <table *ngIf="!isBillingLoading">
+                        <thead style="background:var(--bg-surface);"><tr><th>Invoice ID</th><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th class="text-right">Action</th></tr></thead>
+                        <tbody>
+                            <tr *ngFor="let inv of billingHistory"><td class="mono-text">{{ inv.invoiceId }}</td><td>{{ formatDate(inv.date) }}</td><td><span class="plan-tag">{{ inv.plan }}</span></td><td class="money">{{ inv.amount | currency:'INR' }}</td><td><span class="status-pill open">PAID</span></td><td class="text-right"><button class="action-btn" (click)="downloadInvoice(inv)">⬇️</button></td></tr>
+                            <tr *ngIf="billingHistory.length === 0"><td colspan="6" class="center-msg">No invoices found.</td></tr>
+                        </tbody>
+                    </table>
+                    <div *ngIf="isBillingLoading" class="loading-box">Loading billing details...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="store-container" *ngIf="viewMode === 'AUDIT_LOGS'">
+        <div class="detail-nav"><button class="btn-back" (click)="backToList()">← Back to Store List</button><span class="detail-id">System Audit Trail</span></div>
+        <div class="tile detail-card">
+            <div class="detail-header">
+                <div><h1>System-Wide Audit Logs</h1><p class="slug-text">Track critical actions performed by admins and users.</p></div>
+                <div class="header-right"><button class="btn-refresh" (click)="openAuditLogs()">🔄 Refresh Logs</button></div>
+            </div>
+            <hr class="divider">
+            <div class="table-responsive">
+                <table *ngIf="!isLogsLoading">
+                    <thead style="background:var(--bg-surface);">
+                        <tr><th style="width: 20%;">Timestamp</th><th style="width: 15%;">Performed By</th><th style="width: 20%;">Action</th><th>Target</th><th>Details</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let log of auditLogs">
+                            <td class="mono-text" style="font-size:0.8rem;">{{ formatDate(log.timestamp) }}</td>
+                            <td style="font-weight:600;">{{ log.performedBy }}</td>
+                            <td><span class="plan-tag" [style.color]="log.action.includes('Delete') ? '#ef4444' : '#2563eb'">{{ log.action }}</span></td>
+                            <td style="font-weight:600;">{{ log.target }}</td>
+                            <td style="color:var(--text-secondary); font-size:0.85rem;">{{ log.details }}</td>
+                        </tr>
+                        <tr *ngIf="auditLogs.length === 0"><td colspan="5" class="center-msg">No audit logs found.</td></tr>
+                    </tbody>
+                </table>
+                <div *ngIf="isLogsLoading" class="loading-box">Fetching audit trail...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" *ngIf="isCreateStoreModalOpen" (click)="closeCreateStoreModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header"><h3>Create New Store</h3><button type="button" class="btn-close" (click)="closeCreateStoreModal()">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Store Name <span style="color:red">*</span></label><input type="text" [(ngModel)]="newStoreData.name" placeholder="e.g. Downtown Cafe" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Location</label><input type="text" [(ngModel)]="newStoreData.location" placeholder="City, Area" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Manager Name</label><input type="text" [(ngModel)]="newStoreData.manager" placeholder="Full Name" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Contact Phone</label><input type="text" [(ngModel)]="newStoreData.phone" placeholder="+91 9876543210" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Subscription Plan</label><select [(ngModel)]="newStoreData.plan" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px; background:white;"><option value="1 Month">1 Month Trial</option><option value="1 Year">1 Year Plan</option><option value="Lifetime">Lifetime Access</option></select></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-text" (click)="closeCreateStoreModal()">Cancel</button>
+                <button type="button" class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 20px; font-weight:600;" (click)="createStore()" [disabled]="isCreatingStore">{{ isCreatingStore ? 'Creating...' : 'Create Store' }}</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" *ngIf="isAddItemModalOpen" (click)="closeAddItemModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header"><h3>Add Master Product</h3><button type="button" class="btn-close" (click)="closeAddItemModal()">×</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label>Product Name</label><input type="text" [(ngModel)]="newItemData.name" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Category</label><input type="text" [(ngModel)]="newItemData.category" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Price (₹)</label><input type="number" [(ngModel)]="newItemData.price" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"></div>
+                <div class="form-group"><label>Type</label><select [(ngModel)]="newItemData.type" class="search-input" style="border:1px solid #e2e8f0; padding:10px; border-radius:6px;"><option value="veg">Veg</option><option value="non-veg">Non-Veg</option></select></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-text" (click)="closeAddItemModal()">Cancel</button>
+                <button type="button" class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 20px; font-weight:600;" (click)="saveMasterItem()">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" *ngIf="isPushModalOpen" (click)="closePushModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()" style="width: 500px;">
+            <div class="modal-header"><h3>Push Item to Stores</h3><button type="button" class="btn-close" (click)="closePushModal()">×</button></div>
+            <div class="modal-body">
+                <p style="margin-bottom:15px; color:#64748b;">Select stores to receive <strong>{{ selectedMasterItem?.name }}</strong>.</p>
+                <div class="store-select-list" style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px;">
+                    <div *ngFor="let store of stores" class="store-option" style="padding:10px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center;">
+                        <input type="checkbox" [checked]="selectedStoreIds.has(store.id)" (change)="toggleStoreSelection(store.id)" style="margin-right:10px; width:16px; height:16px;">
+                        <div><div style="font-weight:600; color:#0f172a;">{{ store.name }}</div><div style="font-size:0.75rem; color:#64748b;">{{ store.location }}</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-text" (click)="closePushModal()">Cancel</button>
+                <button type="button" class="btn-refresh" style="background:#2563eb; color:white; width:auto; padding:0 20px; font-weight:600;" (click)="pushItemToSelectedStores()" [disabled]="selectedStoreIds.size === 0">
+                    Push to {{ selectedStoreIds.size }} Stores
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>

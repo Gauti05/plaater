@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ManagedUser, UserProfile, CustomRole } from '../../core/dashboard.model';
@@ -33,6 +33,9 @@ export class UserManagementComponent {
     canDeleteUsers: false, canViewCustomers: false, canManageSettings: false, canViewAuditLog: false 
   };
 
+  // 🔥 Inject ChangeDetectorRef to force UI updates when callbacks run
+  constructor(private cdr: ChangeDetectorRef) {}
+
   openAddUserModal() {
     this.isRoleCreatorMode = false;
     this.newUser = { name: '', email: '', password: '', role: 'User' };
@@ -42,12 +45,14 @@ export class UserManagementComponent {
   openRoleModal() {
     this.isRoleCreatorMode = true;
     this.newRoleName = '';
+    // Reset permissions
     this.newRolePermissions = { canViewDashboard: true, canViewOrders: false, canCreateOrder: false, canManageInventory: false, canViewReports: false, canManageUsers: false, canDeleteUsers: false, canViewCustomers: false, canManageSettings: false, canViewAuditLog: false };
     this.isModalOpen = true;
   }
 
   closeModal() {
     this.isModalOpen = false;
+    this.isProcessing = false;
   }
 
   handleCreateUser() {
@@ -64,7 +69,7 @@ export class UserManagementComponent {
   }
 
   handleCreateRole() {
-    if (!this.newRoleName) {
+    if (!this.newRoleName.trim()) {
       alert("Please enter a role name.");
       return;
     }
@@ -76,15 +81,26 @@ export class UserManagementComponent {
     });
   }
 
+  // 🔥 FIXED: Force UI update and close modal immediately
   onSuccess(msg: string) {
     this.isProcessing = false;
-    this.isModalOpen = false;
+    this.isModalOpen = false;      // Close modal
+    this.isRoleCreatorMode = false; // Reset mode
     this.toastMessage = msg;
     this.showToast = true;
+
+    this.cdr.detectChanges(); // ⚡ Force Angular to detect these changes immediately
+
+    // Auto-hide toast
+    setTimeout(() => {
+        this.showToast = false;
+        this.cdr.detectChanges();
+    }, 3000);
   }
 
   onError(err: string) {
     this.isProcessing = false;
+    this.cdr.detectChanges(); // ⚡ Force update to hide 'Processing...' state
     alert(err);
   }
 }

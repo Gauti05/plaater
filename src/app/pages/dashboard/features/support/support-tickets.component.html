@@ -1,0 +1,114 @@
+<div class="ticket-container">
+      
+    <div class="header-section">
+      <div class="title-group">
+        <h2>Help Desk Support</h2>
+        <p class="subtitle">Manage and resolve incoming support requests from stores.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-pill red">
+          <span class="label">High Priority</span>
+          <span class="value">3</span>
+        </div>
+        <div class="stat-pill blue">
+          <span class="label">Open Tickets</span>
+          <span class="value">8</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile">
+      <div class="tile-header">
+        <h3>Recent Tickets</h3>
+        <div class="actions-row">
+          <input type="text" class="search-input" placeholder="Search tickets..." [(ngModel)]="searchText">
+          <select class="filter-select" [(ngModel)]="statusFilter">
+            <option value="All">All Status</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Store</th>
+              <th>Subject</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th class="text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ticket of filteredTickets" (click)="openTicket(ticket)" class="clickable-row">
+              <td class="mono-text">{{ ticket.id }}</td>
+              <td style="font-weight:600;">{{ ticket.store }}</td>
+              <td>
+                <div class="subject-text">{{ ticket.subject }}</div>
+                <div class="category-badge">{{ ticket.category }}</div>
+              </td>
+              <td>
+                <span class="priority-dot" [ngClass]="ticket.priority.toLowerCase()"></span>
+                {{ ticket.priority }}
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="ticket.status.toLowerCase().replace(' ', '-')">
+                  {{ ticket.status }}
+                </span>
+              </td>
+              <td style="font-size:0.85rem; color:var(--text-secondary);">{{ ticket.date }}</td>
+              <td class="text-right">
+                <button class="action-btn">💬 Reply</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-overlay" *ngIf="selectedTicket" (click)="closeTicket()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        
+        <div class="modal-header">
+          <div>
+            <div class="ticket-id-badge">{{ selectedTicket.id }}</div>
+            <h3>{{ selectedTicket.subject }}</h3>
+            <div class="store-ref">via {{ selectedTicket.store }}</div>
+          </div>
+          <button class="btn-close" (click)="closeTicket()">×</button>
+        </div>
+
+        <div class="modal-body chat-view">
+          <div class="message-list">
+            <div class="message" *ngFor="let msg of selectedTicket.messages" [class.admin]="msg.isAdmin">
+              <div class="msg-meta">
+                <span class="sender">{{ msg.sender }}</span>
+                <span class="time">{{ msg.time }}</span>
+              </div>
+              <div class="msg-bubble">{{ msg.text }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="reply-area">
+            <textarea placeholder="Type your reply here..." [(ngModel)]="replyText"></textarea>
+            <div class="reply-actions">
+              <select [(ngModel)]="selectedTicket.status" class="status-select">
+                <option value="Open">Set Open</option>
+                <option value="In Progress">Set In Progress</option>
+                <option value="Resolved">Set Resolved</option>
+              </select>
+              <button class="btn-send" (click)="sendReply()">Send Reply ➤</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
