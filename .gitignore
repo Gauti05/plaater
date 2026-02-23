@@ -47,3 +47,7 @@ service-account.json
 firebase-debug.log
 .env
 email-bot.js
+
+
+
+firebase.ts
